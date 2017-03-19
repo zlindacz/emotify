@@ -1,10 +1,14 @@
+<!-- source: Spotify API -->
+<!-- webcam source: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia -->
+<!-- https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Taking_still_photos -->
+
 <!doctype html>
 <html>
   <head>
-    <title>Example of the Authorization Code flow with Spotify</title>
+    <title>Emotify</title>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
     <style type="text/css">
-      #login, #loggedin {
+      #login, #loggedin, #emotify {
         display: none;
       }
       .text-overflow {
@@ -13,9 +17,37 @@
         white-space: nowrap;
         width: 500px;
       }
-      .btn {
-        margin-bottom: 25px;
+      .auth {
         display: block;
+        margin-bottom: 20px;
+      }
+      #video-container {
+        margin: 20px auto;
+        width: 520px;
+        height: 395px;
+        border: 10px solid #333;
+      }
+      #video {
+        width: 500px;
+        height: 375px;
+        background-color: #666;
+      }
+      .buttons {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px;
+      }
+      .heading{
+        text-align: center;
+      }
+      .break {
+        height: 50px;
+      }
+      #canvas {
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: auto;
       }
     </style>
   </head>
@@ -23,7 +55,7 @@
   <body>
     <div class="container">
       <div id="login">
-        <h1>This is an example of the Authorization Code flow</h1>
+        <h1>You must be authorized to access Emotify</h1>
         <a href="/login" class="btn btn-primary">Log in with Spotify</a>
       </div>
       <div id="loggedin">
@@ -31,8 +63,20 @@
         </div>
         <div id="oauth">
         </div>
-        <button class="btn btn-default" id="obtain-new-token">Obtain new token using the refresh token</button>
-        <button class="btn btn-primary" id="get-emotions">Capture Emotions</button>
+        <button class="btn btn-default auth" id="obtain-new-token">Obtain new token using the refresh token</button>
+        <button class="btn btn-success auth" id="go-to-emotify">Take me to Emotify</button>
+      </div>
+      <div id="emotify">
+        <h1 class="heading">How do you feel?</h1>
+        <div id="video-container">
+          <video autoplay="true" id="video"></video>
+          <div class="buttons">
+            <button class="btn btn-primary" id="capture-emotions">Capture Emotions</button>
+            <button class="btn btn-warning" id="generate-playlist">Use Photo</button>
+          </div>
+        </div>
+        <div class="break"></div>
+        <canvas id="canvas" width="500" height="375"></canvas>
       </div>
     </div>
 
@@ -132,6 +176,44 @@
           }, false);
         }
       })();
+    </script>
+
+    <script>
+      document.getElementById('go-to-emotify').addEventListener('click', function() {
+        $('#loggedin').hide();
+        $('#emotify').show();
+      })
+    </script>
+
+    <script>
+      var constraints = { video: true, audio: false }
+      var video = document.getElementById("video");
+      var canvas = document.getElementById("canvas");
+      var photo = document.getElementById("photo");
+      var photoButton = document.getElementById("capture-emotions");
+
+      function takeSnapshot() {
+        var context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        var data = canvas.toDataURL('image/png');
+        photo.setAttribute('src', data);
+      }
+
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(mediaStream) {
+          video.srcObject = mediaStream;
+        })
+        .catch(function(err) {
+          console.log(err.name + ": " + err.message);
+        });
+      photoButton.addEventListener('click', takeSnapshot);
+    </script>
+
+    <script>
+      document.getElementById('generate-playlist').addEventListener('click', function() {
+        $('#emotify').hide();
+        $('#please-wait').show();
+      })
     </script>
 
   </body>
