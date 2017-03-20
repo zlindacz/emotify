@@ -16,6 +16,8 @@ var cookieParser = require('cookie-parser');
 var client_id = process.env["SPOTIFY_ID"]; // Your client id
 var client_secret = process.env["SPOTIFY_SECRET"]; // Your secret
 var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
+var ms_emotion_key = process.env["MICROSOFT_EMOTION_KEY"]; // Your Microsoft Emotion API key
+var ms_emotion_uri = 'https://westus.api.cognitive.microsoft.com/emotion/v1.0/recognize';
 
 /**
  * Generates a random string containing numbers and letters

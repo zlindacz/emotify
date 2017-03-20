@@ -8,7 +8,7 @@
     <title>Emotify</title>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
     <style type="text/css">
-      #login, #loggedin, #emotify {
+      #login, #loggedin, #emotify, #please-wait, #playlist {
         display: none;
       }
       .text-overflow {
@@ -77,6 +77,13 @@
         </div>
         <div class="break"></div>
         <canvas id="canvas" width="500" height="375"></canvas>
+      </div>
+      <div id="please-wait" class="heading">
+        <h1>We're working hard to create your playlist...</h1>
+      </div>
+      <div id="playlist" class="heading">
+        <h1>Now Playing</h1>
+        <h3>Playlist</h3>
       </div>
     </div>
 
@@ -189,14 +196,16 @@
       var constraints = { video: true, audio: false }
       var video = document.getElementById("video");
       var canvas = document.getElementById("canvas");
-      var photo = document.getElementById("photo");
+      // var photo = document.getElementById("photo");
       var photoButton = document.getElementById("capture-emotions");
+      var photoData;
 
       function takeSnapshot() {
         var context = canvas.getContext('2d');
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        var data = canvas.toDataURL('image/png');
-        photo.setAttribute('src', data);
+        photoData = canvas.toDataURL('image/png').replace("image/png", "image/octet-stream");
+        // window.location.href = photoData;
+        // photo.setAttribute('src', photoData);
       }
 
       navigator.mediaDevices.getUserMedia(constraints)
@@ -207,13 +216,62 @@
           console.log(err.name + ": " + err.message);
         });
       photoButton.addEventListener('click', takeSnapshot);
+
+      document.getElementById('generate-playlist').addEventListener('click', function() {
+        // http://stackoverflow.com/questions/34817391/adding-microsofts-emotion-api-to-html-website
+        function makeblob(dataURL) {
+            var BASE64_MARKER = ';base64,';
+            if (dataURL.indexOf(BASE64_MARKER) == -1) {
+                var parts = dataURL.split(',');
+                var contentType = parts[0].split(':')[1];
+                var raw = decodeURIComponent(parts[1]);
+                return new Blob([raw], { type: contentType });
+            }
+            var parts = dataURL.split(BASE64_MARKER);
+            var contentType = parts[0].split(':')[1];
+            var raw = window.atob(parts[1]);
+            var rawLength = raw.length;
+
+            var uInt8Array = new Uint8Array(rawLength);
+
+            for (var i = 0; i < rawLength; ++i) {
+                uInt8Array[i] = raw.charCodeAt(i);
+            }
+
+            return new Blob([uInt8Array], { type: contentType });
+        }
+
+        $('#emotify').hide();
+        $('#please-wait').show();
+        $.ajax({
+          url: 'https://westus.api.cognitive.microsoft.com/emotion/v1.0/recognize',
+
+          beforeSend: function(xhrObj){
+             // Request headers
+             xhrObj.setRequestHeader("Content-Type","application/octet-stream");
+             xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","177752e1def14febb2477fcb3a0f8744");
+           },
+           type: "POST",
+           // Request body
+           data: makeblob(photoData),
+           processData: false
+       })
+       .done(function(response) {
+         processResult(response);
+       })
+       .fail(function(error) {
+         alert("error: " + error.getAllResponseHeaders());
+       });
+
+       function processResult(response) {
+         var data = JSON.stringify(response);
+         console.log(data);
+       }
+      })
     </script>
 
     <script>
-      document.getElementById('generate-playlist').addEventListener('click', function() {
-        $('#emotify').hide();
-        $('#please-wait').show();
-      })
+
     </script>
 
   </body>
