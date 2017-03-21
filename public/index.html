@@ -110,7 +110,7 @@
     <script id="oauth-template" type="text/x-handlebars-template">
       <h2>oAuth info</h2>
       <dl class="dl-horizontal">
-        <dt>Access token</dt><dd class="text-overflow">{{access_token}}</dd>
+        <dt>Access token</dt><dd class="text-overflow" id="access_token">{{access_token}}</dd>
         <dt>Refresh token</dt><dd class="text-overflow">{{refresh_token}}></dd>
       </dl>
     </script>
@@ -192,11 +192,15 @@
       })
     </script>
 
+    <!-- seed playlist, take photo and get emotions, process emotions  -->
+    <!-- use emotion scores to get new seeds -->
+    <!-- use new seeds to get recommendations for playlist -->
+
     <script>
+      // take photo
       var constraints = { video: true, audio: false }
       var video = document.getElementById("video");
       var canvas = document.getElementById("canvas");
-      // var photo = document.getElementById("photo");
       var photoButton = document.getElementById("capture-emotions");
       var photoData;
 
@@ -205,7 +209,6 @@
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         photoData = canvas.toDataURL('image/png').replace("image/png", "image/octet-stream");
         // window.location.href = photoData;
-        // photo.setAttribute('src', photoData);
       }
 
       navigator.mediaDevices.getUserMedia(constraints)
@@ -217,7 +220,11 @@
         });
       photoButton.addEventListener('click', takeSnapshot);
 
+      // turn photo into binary image data for submission
       document.getElementById('generate-playlist').addEventListener('click', function() {
+        $('#emotify').hide();
+        $('#please-wait').show();
+
         // http://stackoverflow.com/questions/34817391/adding-microsofts-emotion-api-to-html-website
         function makeblob(dataURL) {
             var BASE64_MARKER = ';base64,';
@@ -241,8 +248,99 @@
             return new Blob([uInt8Array], { type: contentType });
         }
 
-        $('#emotify').hide();
-        $('#please-wait').show();
+        function processValence(valence) {
+          if (valence < -0.5) {
+            return Math.abs(valence)/5;
+          } else if (valence < -0.3) {
+            return Math.abs(valence)/3;
+          } else if (valence < 0) {
+            return Math.abs(valence)/2;
+          } else {
+            return valence;
+          }
+        };
+
+        function tempoTransform(energy) {
+          var target;
+          // scale from 40 - 200
+          // energy 0.0 - 0.1 = tempo 40 - 80
+          // energy 0.1 - 0.9 = tempo 80 - 160
+          // energy 0.9 - 1.0 = tempo 160 - 200
+          if (energy < 0.1) {
+            target = (40 * energy / 0.1) + 40
+          } else if (energy < 0.9) {
+            target = (80 * (energy-0.1) / 0.8) + 80
+          } else {
+            target = (40 * (energy-0.9) / 0.1) + 160
+          }
+          return target;
+        };
+
+        // process Emotion scores
+        function processResult(response) {
+          var [anger,contempt,disgust,fear,
+               happiness,neutral,sadness,surprise]=[0,0,0,0,0,0,0,0];
+
+          for (let i=0; i<response.length; i++) {
+            anger += parseFloat(response[i]["scores"]["anger"]);
+            contempt += parseFloat(response[i]["scores"]["contempt"]);
+            disgust += parseFloat(response[i]["scores"]["disgust"]);
+            fear += parseFloat(response[i]["scores"]["fear"]);
+            happiness += parseFloat(response[i]["scores"]["happiness"]);
+            neutral += parseFloat(response[i]["scores"]["neutral"]);
+            sadness += parseFloat(response[i]["scores"]["sadness"]);
+            surprise += parseFloat(response[i]["scores"]["surprise"]);
+          };
+
+          var energy = (anger + disgust + fear + surprise + happiness/2)/response.length;
+          var valence = processValence((happiness - neutral - sadness - contempt)/response.length)
+          var danceability = (energy + valence * 2)/3;
+          var tempo = tempoTransform(energy);
+          var results = {
+            "danceability": danceability,
+            "energy": energy,
+            "tempo": tempo,
+            "valence": valence,
+          };
+          console.log(results);
+          return results;
+        };
+
+        // function getPlaylist(seeds) {
+        //
+        // };
+
+        // get seeds from spotify based on photo
+        function seedPlaylist(emotions) {
+          // seed tracks:
+          // Rock: Led Zeppelin Stairway to Heaven
+          // Pop: Lana Del Rey West Coast
+          // Hip Hop: Blackalicious Alphabet Aerobics
+          // Electronic: Eric Prydz Opus
+          // Classical: Vivaldi The Four Seasons Winter 1st Mvt
+          var url = 'https://api.spotify.com/v1/recommendations?';
+          var seed_tracks = 'seed_tracks=61tHBAdP2eze7h1KTpCeJe,3v2oAQomhOcYCPPHafS3KV,5fpZBXuorlUCC9SP6LVuw3,4z5L0qDduw3w1apQ4Qa6KV,5CQ30WqJwcep0pYcV4AMNc';
+          var target_danceability = "&target_danceability=" + emotions["danceability"];
+          var target_energy = "&target_energy=" + emotions["energy"];
+          var target_tempo = "&target_tempo=" + emotions["tempo"];
+          var target_valence = "&target_valence=" + emotions["valence"];
+          // var limit = "&limit=5";
+          $.ajax({
+            url: url + seed_tracks + target_danceability + target_energy + target_tempo + target_valence,
+            headers: {
+              'Authorization': 'Bearer ' + $('#access_token').text()
+            }
+          })
+          .done(function(response) {
+            //  getPlaylist(response);
+            console.log(response);
+          })
+          .fail(function(error) {
+            alert("error: " + error.getAllResponseHeaders())
+          });
+        }
+
+        // request emotion scores from MS Emotion API
         $.ajax({
           url: 'https://westus.api.cognitive.microsoft.com/emotion/v1.0/recognize',
 
@@ -257,17 +355,15 @@
            processData: false
        })
        .done(function(response) {
-         processResult(response);
+         var emotions = processResult(response);
+         seedPlaylist(emotions);
        })
        .fail(function(error) {
          alert("error: " + error.getAllResponseHeaders());
        });
 
-       function processResult(response) {
-         var data = JSON.stringify(response);
-         console.log(data);
-       }
-      })
+
+     });
     </script>
 
     <script>
