@@ -8,7 +8,7 @@
     <title>Emotify</title>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
     <style type="text/css">
-      #login, #loggedin, #emotify, #please-wait, #playlist {
+      #login, #loggedin, #emotify, #please-wait, #playlist, #playlist-container {
         display: none;
       }
       .text-overflow {
@@ -42,6 +42,9 @@
       }
       .break {
         height: 50px;
+      }
+      .frame {
+        margin-top: 30px;
       }
       #canvas {
         position: absolute;
@@ -82,9 +85,17 @@
         <h1>We're working hard to create your playlist...</h1>
       </div>
       <div id="playlist" class="heading">
-        <h1>Now Playing</h1>
-        <h3>Playlist</h3>
+        <h1>Here's your playlist</h1>
+        <iframe id="iframe"
+                class="frame"
+                src=""
+                width="300"
+                height="380"
+                frameborder="0"
+                allowtransparency="true">
+        </iframe>
       </div>
+
     </div>
 
     <script id="user-profile-template" type="text/x-handlebars-template">
@@ -293,7 +304,7 @@
           };
 
           var energy = (anger + disgust + fear + surprise + happiness/2)/response.length;
-          var valence = processValence((happiness - neutral - sadness - contempt)/response.length)
+          var valence = processValence((happiness - neutral - sadness - contempt)/response.length);
           var danceability = (energy + valence * 2)/3;
           var tempo = tempoTransform(energy);
           var results = {
@@ -306,12 +317,12 @@
           return results;
         };
 
-        function populatePlaylist(playlistId, music) {
+        function populatePlaylist(playlist, music) {
           var uriString = music.tracks.map(function(track) {
             return track.uri;
           });
           $.ajax({
-            url: 'https://api.spotify.com/v1/users/' + $('#id').text() + '/playlists/' + playlistId + '/tracks',
+            url: 'https://api.spotify.com/v1/users/' + $('#id').text() + '/playlists/' + playlist.id + '/tracks',
             type: 'POST',
             headers: {
               'Authorization': 'Bearer ' + $('#access_token').text(),
@@ -322,7 +333,10 @@
             })
           })
           .done(function(response) {
-            console.log(response);
+            var urlStem = 'https://embed.spotify.com/?uri=';
+            $('#iframe').attr('src', urlStem + playlist.uri);
+            $('#please-wait').hide();
+            $('#playlist').show();
           })
           .fail(function(error) {
             alert("error: " + error.getAllResponseHeaders());
@@ -342,7 +356,7 @@
             })
           })
           .done(function(response) {
-            populatePlaylist(response.id, music)
+            populatePlaylist(response, music)
           })
           .fail(function(error) {
             alert("error: " + error.getAllResponseHeaders());
@@ -354,11 +368,12 @@
           // seed tracks:
           // Rock: Led Zeppelin Stairway to Heaven
           // Pop: Lana Del Rey West Coast
-          // Hip Hop: Blackalicious Alphabet Aerobics
+          // Hip Hop: Blackalicious Alphabet Aerobics (deprecated)
           // Electronic: Eric Prydz Opus
           // Classical: Vivaldi The Four Seasons Winter 1st Mvt
+          // Other: Maggie Rogers Alaska
           var url = 'https://api.spotify.com/v1/recommendations?';
-          var seed_tracks = 'seed_tracks=61tHBAdP2eze7h1KTpCeJe,3v2oAQomhOcYCPPHafS3KV,5fpZBXuorlUCC9SP6LVuw3,4z5L0qDduw3w1apQ4Qa6KV,5CQ30WqJwcep0pYcV4AMNc';
+          var seed_tracks = 'seed_tracks=61tHBAdP2eze7h1KTpCeJe,3v2oAQomhOcYCPPHafS3KV,5fpZBXuorlUCC9SP6LVuw3,5CQ30WqJwcep0pYcV4AMNc,4DyfJFTQb27adTDdhFeSgD';
           var target_danceability = "&target_danceability=" + emotions["danceability"];
           var target_energy = "&target_energy=" + emotions["energy"];
           var target_tempo = "&target_tempo=" + emotions["tempo"];
@@ -401,10 +416,5 @@
        });
      });
     </script>
-
-    <script>
-
-    </script>
-
   </body>
 </html>
