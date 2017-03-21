@@ -90,17 +90,17 @@
     <script id="user-profile-template" type="text/x-handlebars-template">
       <h1>Logged in as Linda</h1>
       <div class="media">
-        <div class="pull-left">
+        <!-- <div class="pull-left">
           <img class="media-object" width="150" src="{{images.0.url}}" />
-        </div>
+        </div> -->
         <div class="media-body">
           <dl class="dl-horizontal">
             <dt>Display name</dt><dd class="clearfix">Linda Soybean</dd>
-            <dt>Id</dt><dd>{{id}}</dd>
+            <dt>Id</dt><dd id="id">{{id}}</dd>
             <dt>Email</dt><dd>{{email}}</dd>
             <dt>Spotify URI</dt><dd><a href="{{external_urls.spotify}}">{{external_urls.spotify}}</a></dd>
             <dt>Link</dt><dd><a href="{{href}}">{{href}}</a></dd>
-            <dt>Profile Image</dt><dd class="clearfix"><a href="{{images.0.url}}">{{images.0.url}}</a></dd>
+            <!-- <dt>Profile Image</dt><dd class="clearfix"><a href="{{images.0.url}}">{{images.0.url}}</a></dd> -->
             <dt>Country</dt><dd>{{country}}</dd>
           </dl>
         </div>
@@ -306,9 +306,48 @@
           return results;
         };
 
-        // function getPlaylist(seeds) {
-        //
-        // };
+        function populatePlaylist(playlistId, music) {
+          var uriString = music.tracks.map(function(track) {
+            return track.uri;
+          });
+          $.ajax({
+            url: 'https://api.spotify.com/v1/users/' + $('#id').text() + '/playlists/' + playlistId + '/tracks',
+            type: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + $('#access_token').text(),
+              'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+              'uris': uriString
+            })
+          })
+          .done(function(response) {
+            console.log(response);
+          })
+          .fail(function(error) {
+            alert("error: " + error.getAllResponseHeaders());
+          });
+        };
+
+        function makePlaylist(music) {
+          $.ajax({
+            url: 'https://api.spotify.com/v1/users/' + $('#id').text() + '/playlists',
+            type: "POST",
+            headers: {
+              'Authorization': 'Bearer ' + $('#access_token').text(),
+              'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+              "name": 'emotions'
+            })
+          })
+          .done(function(response) {
+            populatePlaylist(response.id, music)
+          })
+          .fail(function(error) {
+            alert("error: " + error.getAllResponseHeaders());
+          });
+        };
 
         // get seeds from spotify based on photo
         function seedPlaylist(emotions) {
@@ -332,13 +371,12 @@
             }
           })
           .done(function(response) {
-            //  getPlaylist(response);
-            console.log(response);
+            makePlaylist(response);
           })
           .fail(function(error) {
             alert("error: " + error.getAllResponseHeaders())
           });
-        }
+        };
 
         // request emotion scores from MS Emotion API
         $.ajax({
@@ -361,8 +399,6 @@
        .fail(function(error) {
          alert("error: " + error.getAllResponseHeaders());
        });
-
-
      });
     </script>
 
