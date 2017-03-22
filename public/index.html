@@ -205,9 +205,9 @@
       });
     </script>
 
-    <!-- seed playlist, take photo and get emotions, process emotions  -->
-    <!-- use emotion scores to get new seeds -->
-    <!-- use new seeds to get recommendations for playlist -->
+    <!-- capture photo, send photo data to Emotion API -->
+    <!-- calculate filtering parameters, send to Spotify -->
+    <!-- use recommendations to create embedded playlist -->
 
     <script>
       // take photo
@@ -321,10 +321,6 @@
             alert("error: " + error.getAllResponseHeaders());
           });
         };
-
-        document.getElementById('home').addEventListener('click', function() {
-          $('#iframe').remove();
-        });
 
         function makePlaylist(music) {
           $.ajax({
