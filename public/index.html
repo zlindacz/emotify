@@ -101,9 +101,6 @@
     <script id="user-profile-template" type="text/x-handlebars-template">
       <h1>Logged in as Linda</h1>
       <div class="media">
-        <!-- <div class="pull-left">
-          <img class="media-object" width="150" src="{{images.0.url}}" />
-        </div> -->
         <div class="media-body">
           <dl class="dl-horizontal">
             <dt>Display name</dt><dd class="clearfix">Linda Soybean</dd>
@@ -111,7 +108,6 @@
             <dt>Email</dt><dd>{{email}}</dd>
             <dt>Spotify URI</dt><dd><a href="{{external_urls.spotify}}">{{external_urls.spotify}}</a></dd>
             <dt>Link</dt><dd><a href="{{href}}">{{href}}</a></dd>
-            <!-- <dt>Profile Image</dt><dd class="clearfix"><a href="{{images.0.url}}">{{images.0.url}}</a></dd> -->
             <dt>Country</dt><dd>{{country}}</dd>
           </dl>
         </div>
@@ -200,7 +196,7 @@
       document.getElementById('go-to-emotify').addEventListener('click', function() {
         $('#loggedin').hide();
         $('#emotify').show();
-      })
+      });
     </script>
 
     <!-- seed playlist, take photo and get emotions, process emotions  -->
@@ -218,7 +214,7 @@
       function takeSnapshot() {
         var context = canvas.getContext('2d');
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        photoData = canvas.toDataURL('image/png').replace("image/png", "image/octet-stream");
+        canvas.toBlob(function(image) { photoData = image; }, "image/octet-stream");
         // window.location.href = photoData;
       }
 
@@ -231,33 +227,10 @@
         });
       photoButton.addEventListener('click', takeSnapshot);
 
-      // turn photo into binary image data for submission
+
       document.getElementById('generate-playlist').addEventListener('click', function() {
         $('#emotify').hide();
         $('#please-wait').show();
-
-        // http://stackoverflow.com/questions/34817391/adding-microsofts-emotion-api-to-html-website
-        function makeblob(dataURL) {
-            var BASE64_MARKER = ';base64,';
-            if (dataURL.indexOf(BASE64_MARKER) == -1) {
-                var parts = dataURL.split(',');
-                var contentType = parts[0].split(':')[1];
-                var raw = decodeURIComponent(parts[1]);
-                return new Blob([raw], { type: contentType });
-            }
-            var parts = dataURL.split(BASE64_MARKER);
-            var contentType = parts[0].split(':')[1];
-            var raw = window.atob(parts[1]);
-            var rawLength = raw.length;
-
-            var uInt8Array = new Uint8Array(rawLength);
-
-            for (var i = 0; i < rawLength; ++i) {
-                uInt8Array[i] = raw.charCodeAt(i);
-            }
-
-            return new Blob([uInt8Array], { type: contentType });
-        }
 
         function processValence(valence) {
           if (valence < -0.5) {
@@ -397,7 +370,7 @@
            },
            type: "POST",
            // Request body
-           data: makeblob(photoData),
+           data: photoData,
            processData: false
        })
        .done(function(response) {
