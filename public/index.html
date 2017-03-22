@@ -52,6 +52,11 @@
         right: 0;
         margin: auto;
       }
+      #home {
+        display: block;
+        width: 150px;
+        margin: 20px auto;
+      }
     </style>
   </head>
 
@@ -94,6 +99,7 @@
                 frameborder="0"
                 allowtransparency="true">
         </iframe>
+        <a href="/" class="btn btn-default" id="home">Another Playlist</a>
       </div>
 
     </div>
@@ -315,6 +321,10 @@
             alert("error: " + error.getAllResponseHeaders());
           });
         };
+
+        document.getElementById('home').addEventListener('click', function() {
+          $('#iframe').remove();
+        });
 
         function makePlaylist(music) {
           $.ajax({
