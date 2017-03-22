@@ -365,18 +365,7 @@
 
         // get seeds from spotify based on photo
         function seedPlaylist(emotions) {
-          // seed tracks:
-          // Pop: Lana Del Rey West Coast 5Y6nVaayzitvsD5F7nr3DV
-          // Electronic: Eric Prydz Opus 3v2oAQomhOcYCPPHafS3KV
-          // Rock: Led Zeppelin Stairway to Heaven 5CQ30WqJwcep0pYcV4AMNc
-          // Hip Hop: Blackalicious Alphabet Aerobics (deprecated) 4z5L0qDduw3w1apQ4Qa6KV
-          // Classical: Vivaldi The Four Seasons Winter 1st Mvt 61tHBAdP2eze7h1KTpCeJe
-          // Other: Maggie Rogers Alaska 4DyfJFTQb27adTDdhFeSgD
-          // Other: Calvin Harris, Florence Welch Sweet Nothing 24LS4lQShWyixJ0ZrJXfJ5
-          // Other: Florence + The Machine Howl 0O8rwnPniPEUX71uLpSIE6
-          // Other: Robyn Dancing on my Own 5IJlhaBZ8ioK7JO8JSGzzO
           var url = 'https://api.spotify.com/v1/recommendations?';
-          // var seed_tracks = 'seed_tracks=61tHBAdP2eze7h1KTpCeJe,3v2oAQomhOcYCPPHafS3KV,5Y6nVaayzitvsD5F7nr3DV,5CQ30WqJwcep0pYcV4AMNc,4DyfJFTQb27adTDdhFeSgD';
           var seed_genres = "seed_genres=indie-pop,progressive-house,work-out,alt-rock,sleep";
           var target_danceability = "&target_danceability=" + emotions["danceability"];
           var target_energy = "&target_energy=" + emotions["energy"];
