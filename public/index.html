@@ -274,15 +274,15 @@
         function tempoTransform(energy) {
           var target;
           // scale from 40 - 200
-          // energy 0.0 - 0.1 = tempo 40 - 80
-          // energy 0.1 - 0.9 = tempo 80 - 160
-          // energy 0.9 - 1.0 = tempo 160 - 200
+          // energy 0.0 - 0.1 = tempo 40 - 60
+          // energy 0.1 - 0.9 = tempo 60 - 140
+          // energy 0.9 - 1.0 = tempo 140 - 160
           if (energy < 0.1) {
-            target = (40 * energy / 0.1) + 40
+            target = (20 * energy / 0.1) + 40
           } else if (energy < 0.9) {
-            target = (80 * (energy-0.1) / 0.8) + 80
+            target = (80 * (energy-0.1) / 0.8) + 60
           } else {
-            target = (40 * (energy-0.9) / 0.1) + 160
+            target = (20 * (energy-0.9) / 0.1) + 140
           }
           return target;
         };
@@ -366,21 +366,25 @@
         // get seeds from spotify based on photo
         function seedPlaylist(emotions) {
           // seed tracks:
-          // Rock: Led Zeppelin Stairway to Heaven
-          // Pop: Lana Del Rey West Coast
-          // Hip Hop: Blackalicious Alphabet Aerobics (deprecated)
-          // Electronic: Eric Prydz Opus
-          // Classical: Vivaldi The Four Seasons Winter 1st Mvt
-          // Other: Maggie Rogers Alaska
+          // Pop: Lana Del Rey West Coast 5Y6nVaayzitvsD5F7nr3DV
+          // Electronic: Eric Prydz Opus 3v2oAQomhOcYCPPHafS3KV
+          // Rock: Led Zeppelin Stairway to Heaven 5CQ30WqJwcep0pYcV4AMNc
+          // Hip Hop: Blackalicious Alphabet Aerobics (deprecated) 4z5L0qDduw3w1apQ4Qa6KV
+          // Classical: Vivaldi The Four Seasons Winter 1st Mvt 61tHBAdP2eze7h1KTpCeJe
+          // Other: Maggie Rogers Alaska 4DyfJFTQb27adTDdhFeSgD
+          // Other: Calvin Harris, Florence Welch Sweet Nothing 24LS4lQShWyixJ0ZrJXfJ5
+          // Other: Florence + The Machine Howl 0O8rwnPniPEUX71uLpSIE6
+          // Other: Robyn Dancing on my Own 5IJlhaBZ8ioK7JO8JSGzzO
           var url = 'https://api.spotify.com/v1/recommendations?';
-          var seed_tracks = 'seed_tracks=61tHBAdP2eze7h1KTpCeJe,3v2oAQomhOcYCPPHafS3KV,5fpZBXuorlUCC9SP6LVuw3,5CQ30WqJwcep0pYcV4AMNc,4DyfJFTQb27adTDdhFeSgD';
+          // var seed_tracks = 'seed_tracks=61tHBAdP2eze7h1KTpCeJe,3v2oAQomhOcYCPPHafS3KV,5Y6nVaayzitvsD5F7nr3DV,5CQ30WqJwcep0pYcV4AMNc,4DyfJFTQb27adTDdhFeSgD';
+          var seed_genres = "seed_genres=indie-pop,progressive-house,work-out,alt-rock,sleep";
           var target_danceability = "&target_danceability=" + emotions["danceability"];
           var target_energy = "&target_energy=" + emotions["energy"];
           var target_tempo = "&target_tempo=" + emotions["tempo"];
           var target_valence = "&target_valence=" + emotions["valence"];
           // var limit = "&limit=5";
           $.ajax({
-            url: url + seed_tracks + target_danceability + target_energy + target_tempo + target_valence,
+            url: url + seed_genres + target_danceability + target_energy + target_tempo + target_valence,
             headers: {
               'Authorization': 'Bearer ' + $('#access_token').text()
             }
