@@ -198,24 +198,30 @@
       })();
     </script>
 
-    <script>
-      document.getElementById('go-to-emotify').addEventListener('click', function() {
-        $('#loggedin').hide();
-        $('#emotify').show();
-      });
-    </script>
-
     <!-- capture photo, send photo data to Emotion API -->
     <!-- calculate filtering parameters, send to Spotify -->
     <!-- use recommendations to create embedded playlist -->
 
     <script>
+      document.getElementById('go-to-emotify').addEventListener('click', function() {
+        $('#loggedin').hide();
+        $('#emotify').show();
+      });
+
       // take photo
       var constraints = { video: true, audio: false }
       var video = document.getElementById("video");
       var canvas = document.getElementById("canvas");
       var photoButton = document.getElementById("capture-emotions");
       var photoData;
+
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(mediaStream) {
+          video.srcObject = mediaStream;
+        })
+        .catch(function(err) {
+          console.log(err.name + ": " + err.message);
+      });
 
       function takeSnapshot() {
         var context = canvas.getContext('2d');
@@ -224,31 +230,12 @@
         // window.location.href = photoData;
       }
 
-      navigator.mediaDevices.getUserMedia(constraints)
-        .then(function(mediaStream) {
-          video.srcObject = mediaStream;
-        })
-        .catch(function(err) {
-          console.log(err.name + ": " + err.message);
-        });
       photoButton.addEventListener('click', takeSnapshot);
 
-
+      // When user is happy with photo, proceed
       document.getElementById('generate-playlist').addEventListener('click', function() {
         $('#emotify').hide();
         $('#please-wait').show();
-
-        function processValence(valence) {
-          if (valence < -0.5) {
-            return Math.abs(valence)/5;
-          } else if (valence < -0.3) {
-            return Math.abs(valence)/3;
-          } else if (valence < 0) {
-            return Math.abs(valence)/2;
-          } else {
-            return valence;
-          }
-        };
 
         function tempoTransform(energy) {
           var target;
@@ -282,9 +269,9 @@
             surprise += parseFloat(response[i]["scores"]["surprise"]);
           };
 
-          var energy = (anger + disgust + fear + surprise + happiness/2)/response.length;
-          var valence = processValence((happiness - neutral - sadness - contempt)/response.length);
-          var danceability = (energy + valence * 2)/3;
+          var energy = (anger+disgust+fear+surprise+happiness/2)/response.length;
+          var valence = (response.length+happiness-neutral-sadness-contempt)/(2*response.length);
+          var danceability = (energy+valence* 2)/3;
           var tempo = tempoTransform(energy);
           var results = {
             "danceability": danceability,
